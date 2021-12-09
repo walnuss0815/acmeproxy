@@ -117,7 +117,7 @@ func ActionHandler(action string, server *Server) http.Handler {
 						"value":    incoming.Value,
 						"mode":     mode,
 						"error":    err.Error(),
-					}).Error("Failed to update TXT record")
+					}).Errorf("Failed to update TXT record, %v", err)
 					http.Error(w, "Failed to update TXT record", http.StatusInternalServerError)
 					return
 				}
@@ -162,7 +162,7 @@ func ActionHandler(action string, server *Server) http.Handler {
 					"keyAuth":  incoming.KeyAuth,
 					"value":    value,
 					"mode":     mode,
-				}).Error("Failed to update TXT record")
+				}).Errorf("Failed to update TXT record, %v", err)
 				http.Error(w, "Failed to update TXT record", http.StatusInternalServerError)
 				return
 			}
