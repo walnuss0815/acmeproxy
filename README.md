@@ -13,15 +13,12 @@ As a solution Acmeproxy provides the following:
 - Provide a single (acmeproxy) host that has access to the DNS credentials / API, limiting a possible attack surface
 - Username/password or IP-based filtering for clients to prevent unauthorized access
 - Domain validation to only allow ACME DNS requests for specific domains
-- Use [certmagic](https://github.com/mholt/certmagic) internally to run a https instance of acmeproxy and manage certificates (set `--ssl auto`)
 
-If you're looking for other ways to validate internal certificates, take a look at [autocertdelegate](https://github.com/bradfitz/autocertdelegate) which uses the tls-alpn-01 method.
+If you're looking for other ways to validate internal certificates, take a look
+at [autocertdelegate](https://github.com/bradfitz/autocertdelegate) which uses the tls-alpn-01 method.
 
-Acmeproxy was written to be run within an internal network, it's not recommended to expose your Acmeproxy host to the outside world. Do so at your own risk. 
-
-
-## Background
-See the discussions for this idea in lego [here](https://github.com/go-acme/lego/pull/708)
+Acmeproxy was written to be run within an internal network, it's not recommended exposing your Acmeproxy host to the
+outside world. Do so at your own risk.
 
 # Build
 
@@ -39,42 +36,28 @@ If you want to build a Debian package / installer, use `dch` to update the chang
 Copy `config.yml` to a directory (default: `/etc/acmeproxy`). See below for a configuration example using the `transip` provider. You need to specify the relevant environment variables for the provider you've chose. See the [lego](https://github.com/go-acme/lego) documentation for options per provider. Also see the examples below. If you want to provide proxies for multiple providers, start multiple instances on different hosts/ports (using different config files).
 
 ```
+# Server configuration
+server:
+  port: 9096
+  # htpasswd: "/etc/acmeproxy/htpasswd"
+  accesslog: "/var/log/acmeproxy.log"
+
+provider: "transip"
+
+# Filter configuration
+filter:
+  ips:
+    - "127.0.0.1"
+    - "172.16.0.0/16"
+  domains:
+    - "example.com"
+
 # Environment variables to be used with this provider
 environment:
- - "TRANSIP_ACCOUNT_NAME=example"
- - "TRANSIP_PRIVATE_KEY_PATH=/etc/acmeproxy/transip.key"
- - "TRANSIP_POLLING_INTERVAL=30"
- - "TRANSIP_PROPAGATION_TIMEOUT=600"
-
-# General settings
-interface: "acmeproxy.example.com"
-port: 9096
-provider: "transip"
-htpasswd-file: "/etc/acmeproxy/htpasswd"
-accesslog-file: "/var/log/acmeproxy.log"
-log-forcecolors: true
-log-forceformatting: true
-log-level: debug
-log-timestamp: true
-allowed-domains:
- - "example.com"
- - "example.net"
- - "anotherexample.net"
-allowed-ips:
- - 127.0.0.1
- - 172.0.0/16
-
-# Settings for the acmeproxy SSL certificate (used with this interface)
-ssl: manual
-ssl.manual.cert-file: "/etc/lego/certificates/acmeproxy.example.com.crt"
-ssl.manual.key-file: "/etc/lego/certificates/acmeproxy.example.com.key"
-ssl.auto.agreed: true
-#ssl.auto.ca: "https://acme-v02.api.letsencrypt.org/directory"
-ssl.auto.ca: "https://acme-staging-v02.api.letsencrypt.org/directory"
-ssl.auto.email: "johndoe@example.com"
-ssl.auto.key-type: "rsa2048"
-ssl.auto.path: "/etc/acmeproxy/certmagic"
-ssl.auto.provider: "transip"
+  TRANSIP_ACCOUNT_NAME: mdbraber
+  TRANSIP_PRIVATE_KEY_PATH: /etc/acmeproxy/transip.key
+  TRANSIP_POLLING_INTERVAL: 30
+  TRANSIP_PROPAGATION_TIMEOUT: 600
 ```
 
 ## Authentication 
@@ -89,44 +72,6 @@ If you've configured acmeproxy via the config file, you can just run `acmeproxy`
 
 ## Daemon mode
 If you want to use acmeproxy as a daemon (in the background) use the `acmeproxy.service` in `debian/` as an example for systemd and copy it to `/etc/systemd/systemd` and enable it by `systemctl enable acmeproxy.service`. Be sure to check the `ExecStart` variable to see if it points to the right executable (`/usr/bin/acmeproxy` by default). Of course if you build `acmeproxy` as a Debian package the systemd service will be installed as part of the package.
-
-## Options
-
-```
-NAME:
-   acmeproxy - Proxy server for ACME DNS challenges
-
-USAGE:
-   acmeproxy [global options] [arguments...]
-
-VERSION:
-   dev
-
-GLOBAL OPTIONS:
-   --accesslog-file FILE        Location of additional accesslog FILE
-   --allowed-domains value      Set the allowed domain(s) that certificates can be requested for.
-   --allowed-ips value          Set the allowed IP(s) that can request certificates (CIDR notation possible, see https://github.com/jpillora/ipfilter)
-   --config-file FILE           Load configuration from FILE (default: "/etc/acmeproxy/config.yml")
-   --htpasswd-file FILE         Htpassword file FILE for username/password authentication (default: "/root/.acmeproxy/htpasswd")
-   --interface value            Interface (ip or host) to bind for requests
-   --log-level LEVEL            Log LEVEL (trace|debug|info|warn|error|fatal|panic) (default: "info")
-   --log-forcecolors            Force colors on output, even when there is no TTY
-   --log-forceformatting        Force formatting on output, even when there is no TTY
-   --log-timestamp              Output date/time on standard output log
-   --port value                 Port to bind for requests (default: 9095)
-   --provider value             DNS challenge provider - see https://github.com/go-acme/lego for options, also set relevant environment variables!
-   --ssl value                  Provide a HTTPS connection when listening to interface:port (supported: auto or manual)
-   --ssl.auto.agreed            Read and agree to your CA's legal documents
-   --ssl.auto.ca value          Certmagic CA endpoint (default: "https://acme-v02.api.letsencrypt.org/directory")
-   --ssl.auto.email value       Provide an e-mail address to be linked to your certificates (defaults to $EMAIL)
-   --ssl.auto.key-type value    Key type to use for private keys. Supported: rsa2048, rsa4096, rsa8192, ec256, ec384. (default: "rsa2048")
-   --ssl.auto.path PATH         PATH to store certmagic information (default: "/root/.acmeproxy/certmagic")
-   --ssl.auto.provider value    Certmagic DNS provider (defaults to --provider/-p)
-   --ssl.manual.cert-file FILE  Location of certificate FILE (when using --ssl/-s)
-   --ssl.manual.key-file FILE   Location of key FILE (when using --ssl/-s)
-   --help, -h                   show help
-   --version, -v                print the version
-```
 
 ## Showing systemd logs
 
