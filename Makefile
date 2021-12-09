@@ -3,7 +3,7 @@
 SRCS = $(shell git ls-files '*.go' | grep -v '^vendor/')
 
 ACMEPROXY_IMAGE := mdbraber/acmeproxy
-MAIN_DIRECTORY := ./cmd/acmeproxy/
+MAIN_DIRECTORY := ./acmeproxy/
 BIN_OUTPUT := dist/acmeproxy
 
 TAG_NAME := $(shell git tag -l --contains HEAD)
