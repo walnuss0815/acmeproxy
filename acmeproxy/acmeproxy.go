@@ -1,52 +1,59 @@
 package main
 
 import (
+	"flag"
 	"github.com/mdbraber/acmeproxy/acmeproxy/server"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	"os"
+	"strconv"
+	"strings"
 )
 
 var (
 	version = "dev"
 )
 
+var port uint
+var provider string
+var allowedDomainsString string
+var allowedDomains []string
+
 func main() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/acmeproxy/")
-	viper.AddConfigPath("$HOME/.acmeproxy")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
+	Init()
 
-	config := NewDefaultConfig()
-
-	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-		log.Info("no config file found")
-	}
-
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		log.Fatalf("unable to decode config, %v", err)
-	}
-
-	err = setEnvVars(config.Environment)
-	if err != nil {
-		log.Fatalf("unable to set env vars, %v", err)
-	}
-
-	serverConfig := server.Config{
-		HtpasswdFile:   config.Server.Htpasswd,
-		AllowedIPs:     config.Filter.Ips,
-		AllowedDomains: config.Filter.Domains,
-		AccessLogFile:  config.Server.Accesslog,
-		Port:           config.Server.Port,
-		ProviderName:   config.Provider,
-	}
-
-	srv, err := server.NewServer(&serverConfig)
+	srv, err := server.NewServer(port, provider, allowedDomains)
 	if err != nil {
 		log.Fatalf("unable to create server, %v", err)
 	}
 
 	srv.Run()
+}
+
+func Init() {
+	envPrefix := "ACMEPROXY_"
+	envPort := os.Getenv(envPrefix + "PORT")
+	envProvider := os.Getenv(envPrefix + "PROVIDER")
+	envAllowedDomains := os.Getenv(envPrefix + "DOMAINS")
+
+	if envPort != "" {
+		p, err := strconv.ParseUint(envPort, 10, 32)
+		if err != nil {
+			log.Panicf("unable to parse port %s, %v", envPort, err)
+		}
+
+		port = uint(p)
+	} else {
+		port = 9096
+	}
+
+	flag.UintVar(&port, "port", port, "server port")
+	flag.StringVar(&provider, "provider", envProvider, "DNS provider")
+	flag.StringVar(&allowedDomainsString, "domains", envAllowedDomains, "comma seperated list of allowed domains")
+
+	allowedDomains = strings.Split(allowedDomainsString, ",")
+	for i := range allowedDomains {
+		allowedDomains[i] = strings.TrimSpace(allowedDomains[i])
+	}
+
+	flag.Parse()
 }
