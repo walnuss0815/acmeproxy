@@ -17,6 +17,7 @@ var port uint
 var provider string
 var allowedDomainsString string
 var allowedDomains []string
+var debugLogging bool
 
 func main() {
 	Init()
@@ -49,11 +50,16 @@ func Init() {
 	flag.UintVar(&port, "port", port, "server port")
 	flag.StringVar(&provider, "provider", envProvider, "DNS provider")
 	flag.StringVar(&allowedDomainsString, "domains", envAllowedDomains, "comma seperated list of allowed domains")
+	flag.BoolVar(&debugLogging, "debug", false, "enable debug logging")
+
+	flag.Parse()
 
 	allowedDomains = strings.Split(allowedDomainsString, ",")
 	for i := range allowedDomains {
 		allowedDomains[i] = strings.TrimSpace(allowedDomains[i])
 	}
 
-	flag.Parse()
+	if debugLogging {
+		log.SetLevel(log.DebugLevel)
+	}
 }

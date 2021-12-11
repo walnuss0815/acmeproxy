@@ -48,11 +48,12 @@ If you want to build a Debian package / installer, use `dch` to update the chang
 You need to specify the relevant environment variables for the provider you've chosen. See
 the [lego](https://github.com/go-acme/lego) documentation for options per provider.
 
-| Name            | Argument  | Environment variable | Default | Example                                       |
-| --------------- | --------- |----------------------|---------|-----------------------------------------------|
-| Server port     | -port     | ACMEPROXY_PORT       | `9096`  | `9096`                                        |
-| DNS provider    | -provider | ACMEPROXY_PROVIDER   |         | `cloudflare`                                  |
-| Allowed domains | -domains  | ACMEPROXY_DOMAINS    |         | `internal1.example.com,internal2.example.com` |
+| Name                 | Argument  | Environment variable | Default | Example                                       |
+|----------------------|-----------|----------------------|---------|-----------------------------------------------|
+| Server port          | -port     | ACMEPROXY_PORT       | `9096`  | `9096`                                        |
+| DNS provider         | -provider | ACMEPROXY_PROVIDER   |         | `cloudflare`                                  |
+| Allowed domains      | -domains  | ACMEPROXY_DOMAINS    |         | `internal1.example.com,internal2.example.com` |
+| Enable debug logging | -debug    |                      |         |                                               |
 
 
 # Usage
