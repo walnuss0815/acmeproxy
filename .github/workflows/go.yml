@@ -36,7 +36,7 @@ jobs:
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
 
       - name: Build
-        run: go build -v .
+        run: go build -v -o dist/acmeproxy .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
