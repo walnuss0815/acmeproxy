@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/walnuss0815/acmeproxy/v2/acme/provider"
 	"github.com/walnuss0815/acmeproxy/v2/acme/proxy"
@@ -13,7 +15,7 @@ func main() {
 	Init()
 
 	port := viper.GetUint("server.port")
-	allowedDomains := viper.GetStringSlice("allowed_domains")
+	allowedDomains := viper.GetStringSlice("domains")
 	proxy := proxy.NewProxy(provider.NewDefaultProviderCloudflare(), allowedDomains)
 
 	srv := server.NewServer(port, proxy)
@@ -24,6 +26,7 @@ func main() {
 func Init() {
 	viper.SetEnvPrefix("acmeproxy")
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	viper.SetConfigName("config")          // name of config file (without extension)
 	viper.SetConfigType("yaml")            // REQUIRED if the config file does not have the extension in the name
